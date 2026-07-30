@@ -213,25 +213,5 @@ const simulateConflict = true;
 
 Save the file.
 
-### Step 4: Create an offline booking
+You will now see that bookings are getting queued and cnflicted but when simualteConflict = true
 
-1. Disconnect the internet (or use the application's offline simulation if available).
-2. Create a booking.
-3. The booking will be stored in the offline queue.
-
-### Step 5: Restore connectivity
-
-Reconnect to the internet.
-
-The synchronization engine will process the queued booking.
-
-Since the provider is marked as unavailable, the booking will enter the conflict resolution flow instead of being confirmed.
-
-### Expected Result
-
-The application should:
-
-- Detect the conflict.
-- Prevent the booking from being committed.
-- Update the synchronization status.
-- Inform the user that the booking could not be completed because the provider is unavailable.
