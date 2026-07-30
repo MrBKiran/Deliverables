@@ -2,8 +2,9 @@ import {
     customerUser,
     providerUser,
     mockJwt,
-    type UserRole,
 } from "../../auth/mockUser";
+
+import type { UserRole } from "../../shared/types/UserRole";
 
 export class AuthService {
 

@@ -1,4 +1,4 @@
-export type UserRole = "customer" | "provider";
+import type { UserRole } from "../shared/types/UserRole";
 
 export interface UserProfile {
     id: string;

@@ -12,7 +12,7 @@ import { customerUser } from "../../auth/mockUser";
 export class BookingRepository {
 
     private queue = new OfflineQueue();
-    private syncEngine = new SyncEngine();
+    private syncEngine = new SyncEngine(this.queue);
 
     async updateBookingStatus(
         providerId: string,
