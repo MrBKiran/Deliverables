@@ -13,9 +13,10 @@ export const customerUser: UserProfile = {
 };
 
 export const providerUser: UserProfile = {
-    id: "provider-001",
+    id: "2328eacb-1702-4cb3-b53c-df2a6e5c54f7",
     name: "Dr. Sarah Smith",
     role: "provider",
 };
+
 
 export const mockJwt = "mock-jwt-token";

@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAppState } from "../state/AppContext";
-import { useAuth } from "../auth/AuthContext";
+import { useAppState } from "../../../state/AppContext";
+import { useAuth } from "../../../auth/AuthContext";
 
 import {
     BookingStatus,
     getVisibleProviderLocation,
-} from "../services/bookingState";
+} from "../../../services/bookingState";
 
-import { ProviderRepository } from "../modules/care/repositories/ProviderRepository";
-import { BookingRepository } from "../shared/repositories/BookingRepository";
+import { ProviderRepository } from "../repositories/ProviderRepository";
+import { BookingRepository } from "../../../shared/repositories/BookingRepository";
 
-import type { Provider } from "../types/provider";
+import type { Provider } from "../../../types/provider";
 
 export default function Provider() {
     const { logout, user } = useAuth();

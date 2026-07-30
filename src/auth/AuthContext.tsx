@@ -7,11 +7,13 @@ import {
 } from "react";
 
 import { AuthService } from "../shared/auth/AuthService";
-import type { UserProfile, UserRole } from "./mockUser";
+import type { UserProfile } from "./mockUser";
+import type { UserRole } from "../shared/types/UserRole";
 
 interface AuthContextType {
     isAuthenticated: boolean;
     user: UserProfile | null;
+    role: UserRole | null;
     login: (role: UserRole) => void;
     logout: () => void;
 }
@@ -57,6 +59,7 @@ export function AuthProvider({
             value={{
                 isAuthenticated,
                 user,
+                role: user?.role ?? null,
                 login,
                 logout,
             }}

@@ -16,10 +16,19 @@ export class OfflineQueue {
         this.storage.saveQueue(this.queue);
     }
 
+    peek(): OfflineOperation | undefined {
+    return this.queue[0];
+    }
+
     dequeue(): OfflineOperation | undefined {
         const operation = this.queue.shift();
         this.storage.saveQueue(this.queue);
         return operation;
+    }
+
+    removeFirst(): void {
+    this.queue.shift();
+    this.storage.saveQueue(this.queue);
     }
 
     getAll(): OfflineOperation[] {
@@ -34,4 +43,6 @@ export class OfflineQueue {
         this.queue = [];
         this.storage.clearQueue();
     }
+
+    
 }

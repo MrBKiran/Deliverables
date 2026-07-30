@@ -1,13 +1,20 @@
 import { useAuth } from "./auth/AuthContext";
-import Login from "./pages/Login";
-import Provider from "./pages/Provider";
+import Login from "./shared/auth/Login";
+import RootNavigator from "./app/navigation/RootNavigator";
+import ErrorBoundary from "./modules/care/components/ErrorBoundary";
 
 function App() {
     const { isAuthenticated } = useAuth();
 
-    return isAuthenticated
-        ? <Provider />
-        : <Login />;
+    if (!isAuthenticated) {
+        return <Login />;
+    }
+
+    return (
+    <ErrorBoundary>
+        <RootNavigator />
+    </ErrorBoundary>
+);
 }
 
 export default App;

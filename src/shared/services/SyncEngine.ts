@@ -5,22 +5,26 @@ import { NetworkService } from "./NetworkService";
 
 export class SyncEngine {
 
-    private queue = new OfflineQueue();
+    private queue: OfflineQueue;
     private resolver = new ConflictResolver();
     private network = new NetworkService();
 
-    async sync(): Promise<void> {
+    constructor(queue: OfflineQueue) {
+        this.queue = queue;
+    }
+
+    async sync(): Promise<boolean> {
 
         if (!this.network.isOnline()) {
-            console.log("Offline. Operations remain queued.");
-            return;
-        }
+    console.log("Offline. Operations remain queued.");
+    return false;
+}
 
         console.log("Starting sync...");
 
         while (!this.queue.isEmpty()) {
 
-            const operation = this.queue.dequeue();
+            const operation = this.queue.peek();
 
             if (!operation) {
                 continue;
@@ -34,10 +38,12 @@ export class SyncEngine {
                 setTimeout(resolve, 1000)
             );
 
-            // Simulate server version
-            const serverVersion =
-                operation.version +
-                Math.floor(Math.random() * 2);
+            // Simulatinh server version
+            const simulateConflict = false; // Change this thing to true fer test conflicts
+
+            const serverVersion = simulateConflict
+            ? operation.version + 1
+            : operation.version;
 
             if (
                 this.resolver.hasConflict(
@@ -52,6 +58,7 @@ export class SyncEngine {
                     "Conflict detected:",
                     operation.id
                 );
+                return false;
 
             } else {
 
@@ -65,6 +72,9 @@ export class SyncEngine {
                     "Successfully synced:",
                     operation.id
                 );
+                this.queue.removeFirst();
+
+
             }
 
             console.log(
@@ -74,6 +84,7 @@ export class SyncEngine {
         }
 
         console.log("Queue is empty.");
+        return true;
     }
 
     getNetworkService() {
