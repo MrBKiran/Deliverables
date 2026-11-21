@@ -1,0 +1,336 @@
+# Offline Sync Logic
+
+## Overview
+
+The application was designed following an **offline-first** architecture to ensure that booking requests could still be created even when internet connectivity was unavailable. Instead of preventing users from interacting with the application, booking operations would be temporarily stored in an offline queue and synchronized with Supabase once network connectivity was restored.
+
+The primary objectives of this design were:
+
+- Prevent loss of booking requests during network interruptions.
+- Maintain a responsive user experience while offline.
+- Synchronize queued operations automatically.
+- Detect conflicts before committing data.
+- Preserve database consistency.
+
+---
+
+# Planned Architecture
+
+The offline synchronization system was planned as four independent components working together.
+
+```
+                 User
+                   │
+                   ▼
+           Booking Request
+                   │
+                   ▼
+          Offline Queue Manager
+                   │
+        ┌──────────┴──────────┐
+        │                     │
+ Offline Storage       Network Monitor
+        │                     │
+        └──────────┬──────────┘
+                   ▼
+            Synchronization Engine
+                   │
+                   ▼
+          Conflict Resolution
+                   │
+        ┌──────────┴──────────┐
+        │                     │
+     Success              Conflict
+        │                     │
+        ▼                     ▼
+   Commit Booking      Notify User
+                   │
+                   ▼
+               Supabase
+```
+
+Each component was designed to have a single responsibility, making the synchronization process modular and easier to maintain.
+
+---
+
+# Step 1 – Booking Creation
+
+When a user creates a booking, the application first attempts to determine the current network status.
+
+### Online
+
+If an internet connection is available:
+
+1. Validate the booking.
+2. Send the booking to the repository.
+3. Store the booking in Supabase.
+4. Display success.
+
+### Offline
+
+If the device is offline:
+
+1. Do not reject the booking.
+2. Create an offline operation object.
+3. Store the operation in the local queue.
+4. Mark its state as **Pending**.
+5. Inform the user that synchronization will occur automatically.
+
+This allows users to continue using the application without interruption.
+
+---
+
+# Step 2 – Offline Queue
+
+The offline queue acts as temporary storage for operations that cannot yet be committed.
+
+Each queued operation was planned to contain information such as:
+
+- Operation ID
+- Booking data
+- Timestamp
+- Synchronization state
+- Retry count
+
+Example:
+
+```
+Operation
+│
+├── Booking Data
+├── Timestamp
+├── State = Pending
+└── Retry Count = 0
+```
+
+The queue preserves the original order of operations so that bookings are replayed sequentially after connectivity returns.
+
+---
+
+# Step 3 – Network Monitoring
+
+A dedicated network monitoring component continuously checks whether internet connectivity has been restored.
+
+Possible states include:
+
+```
+Online
+
+↓
+
+Offline
+
+↓
+
+Reconnected
+```
+
+No synchronization occurs while the device remains offline.
+
+Only when connectivity changes from **Offline** to **Online** does the synchronization process begin.
+
+This prevents unnecessary synchronization attempts.
+
+---
+
+# Step 4 – Synchronization Engine
+
+Once connectivity is restored, the Synchronization Engine processes every queued operation.
+
+For each booking, the planned workflow is:
+
+```
+Read Queue
+
+↓
+
+Take First Booking
+
+↓
+
+Validate
+
+↓
+
+Attempt Synchronization
+
+↓
+
+Success?
+
+↓
+
+Remove From Queue
+
+↓
+
+Process Next Booking
+```
+
+Bookings would be processed sequentially rather than simultaneously to preserve ordering and simplify conflict handling.
+
+---
+
+# Step 5 – Conflict Detection
+
+Before sending a queued booking to Supabase, the Synchronization Engine was designed to perform a final validation.
+
+Instead of assuming the provider is still available, the engine would request the provider's latest availability from the database.
+
+Possible outcomes:
+
+### Provider Available
+
+```
+Queue
+
+↓
+
+Validate
+
+↓
+
+Available
+
+↓
+
+Commit Booking
+
+↓
+
+Remove From Queue
+```
+
+The booking would be written to the database and removed from the queue.
+
+---
+
+### Provider Unavailable
+
+```
+Queue
+
+↓
+
+Validate
+
+↓
+
+Unavailable
+
+↓
+
+Conflict Detected
+
+↓
+
+Stop Synchronization
+```
+
+Instead of committing an invalid booking, the synchronization process would mark the booking as conflicted.
+
+The booking would remain in the queue until resolved.
+
+---
+
+# Planned Conflict Resolution
+
+The Conflict Resolver was designed to prevent invalid bookings from reaching the database.
+
+Its responsibilities included:
+
+- Checking provider availability.
+- Detecting stale bookings.
+- Preventing duplicate submissions.
+- Updating synchronization status.
+- Reporting conflicts to the user.
+
+This ensures that offline data cannot overwrite more recent server-side information.
+
+---
+
+# Planned Synchronization States
+
+Each queued operation was intended to transition through several states.
+
+```
+Pending
+
+↓
+
+Synchronizing
+
+↓
+
+Completed
+```
+
+or
+
+```
+Pending
+
+↓
+
+Synchronizing
+
+↓
+
+Conflict
+```
+
+or
+
+```
+Pending
+
+↓
+
+Synchronizing
+
+↓
+
+Failed
+
+↓
+
+Retry
+```
+
+Maintaining explicit synchronization states makes debugging easier and provides clear feedback to users.
+
+---
+
+# Current Implementation Status
+
+The current project contains the initial architecture for the offline synchronization system, including:
+
+- Offline queue structure.
+- Synchronization engine.
+- Conflict resolver.
+- Network monitoring service.
+
+However, the complete synchronization workflow has not yet been fully integrated.
+
+At the time of submission:
+
+- Booking requests are not consistently persisted to the Supabase `bookings` table.
+- Offline queue replay has not been fully completed.
+- Conflict resolution remains partially implemented.
+- End-to-end synchronization has not been fully validated.
+
+The current implementation should therefore be considered a prototype demonstrating the intended architecture rather than a complete offline synchronization solution.
+
+---
+
+# Future Improvements
+
+The planned production implementation would include:
+
+- Persistent queue storage using local device storage.
+- Automatic synchronization after reconnection.
+- Transaction-based synchronization.
+- Automatic retry with exponential backoff.
+- User notifications for synchronization progress.
+- Manual conflict resolution options.
+- Background synchronization support.
